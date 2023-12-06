@@ -1,23 +1,9 @@
-use actix_web::{web, App, HttpRequest, HttpServer, Responder, HttpResponse};
-
-async fn greet(req: HttpRequest) -> impl Responder {
-    let name = req.match_info().get("name").unwrap_or("World");
-    format!("Hello {}!", name)
-}
-
-async fn health_check(req: HttpRequest) -> impl Responder {
-    HttpResponse::Ok()
-}
+use std::net::TcpListener;
+use falcon_rust::run;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    HttpServer::new( || {
-        App::new()
-            .route("/health",web::get().to(health_check))
-
-    })
-        .bind("127.0.0.1:8000")
-        .expect("Could not bind to PORT 8000!")
-        .run()
-        .await
+    let listener = TcpListener::bind("127.0.0.1:8000").expect("Failed to bind to port 8000");
+    // Bubble up the io::Error if we failed to bind address
+    run(listener)?.await
 }

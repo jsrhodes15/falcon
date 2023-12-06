@@ -1,10 +1,20 @@
 [package]
 name = "falcon_rust"
 version = "0.1.0"
+authors = ["Jordan Rhodes <jrhodes@exzeo.com"]
 edition = "2021"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "falcon_rust"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 actix-web = { version = "4" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"]}
+
+[dev-dependencies]
+reqwest = "0.11"
