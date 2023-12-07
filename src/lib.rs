@@ -1,5 +1,5 @@
-use actix_web::{web, App, HttpRequest, HttpServer, HttpResponse, Responder};
 use actix_web::dev::Server;
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use std::net::TcpListener;
 
 async fn health_check(_req: HttpRequest) -> impl Responder {
@@ -7,11 +7,7 @@ async fn health_check(_req: HttpRequest) -> impl Responder {
 }
 
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
-    let server = HttpServer::new( || {
-        App::new()
-            .route("/health", web::get().to(health_check))
-
-    })
+    let server = HttpServer::new(|| App::new().route("/health", web::get().to(health_check)))
         .listen(listener)?
         .run();
 

@@ -1,5 +1,5 @@
-use std::net::TcpListener;
 use falcon_rust::run;
+use std::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
