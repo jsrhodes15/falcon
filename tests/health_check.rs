@@ -3,7 +3,7 @@ use std::net::TcpListener;
 fn spawn_app() -> String {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port.");
     let port = listener.local_addr().unwrap().port();
-    let server = falcon_rust::run(listener).expect("Failed to bind address");
+    let server = falcon_rust::startup::run(listener).expect("Failed to bind address");
     // Launch server as background task
     // tokio::spawn returns a handle to the spawned Future,
     // but we have no use for it here, hence the non-binding let _
