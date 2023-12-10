@@ -1,14 +1,14 @@
-use env_logger::Env;
 use falcon_rust::configuration::get_configuration;
 use falcon_rust::startup::run;
+use falcon_rust::telemetry::{get_subscriber, init_subscriber};
 use sqlx::PgPool;
 use std::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    // `init` does call `set_logger`, so this is all we need to do.
-    // We are falling back to printing all logs at info-level or above if the RUST_LOG env variable is not set.
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    let subscriber = get_subscriber("falcon-external".into(), "info".into());
+    init_subscriber(subscriber);
+
     // panic if we can't read config
     let configuration = get_configuration().expect("Failed to read config");
     let connection_pool = PgPool::connect(&configuration.database.connection_string())
