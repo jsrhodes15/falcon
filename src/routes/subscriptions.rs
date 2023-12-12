@@ -13,12 +13,10 @@ pub struct FormData {
     name = "Adding a new subscriber",
     skip(form, pool),
     fields(
-        request_id = %Uuid::new_v4(),
         subscriber_email = %form.email,
         subscriber_name = %form.name
     )
 )]
-
 // using serde and our FormData struct to automagically attempt deserialization of payload, returning 200 when ok and 400 if something goes wrong
 pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
     match insert_subscriber(&pool, &form).await {
