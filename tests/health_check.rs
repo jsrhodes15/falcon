@@ -1,7 +1,9 @@
 use falcon_rust::configuration::{get_configuration, DatabaseSettings};
+use falcon_rust::email_client::EmailClient;
 use falcon_rust::startup::run;
 use falcon_rust::telemetry::{get_subscriber, init_subscriber};
 use once_cell::sync::Lazy;
+use reqwest::Url;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
@@ -38,12 +40,23 @@ async fn spawn_app() -> TestApp {
     configuration.database.database_name = Uuid::new_v4().to_string();
     let connection_pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, connection_pool.clone()).expect("Failed to bind address");
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address");
+    let base_url = Url::parse(&configuration.email_client.base_url).expect("Invalid base url");
+    let email_client = EmailClient::new(
+        base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+    );
+
+    let server =
+        run(listener, connection_pool.clone(), email_client).expect("Failed to bind address");
     // Launch server as background task
     // tokio::spawn returns a handle to the spawned Future,
     // but we have no use for it here, hence the non-binding let _
     let _ = tokio::spawn(server);
-
     TestApp {
         address,
         db_pool: connection_pool,
