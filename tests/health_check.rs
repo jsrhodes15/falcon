@@ -45,10 +45,12 @@ async fn spawn_app() -> TestApp {
         .sender()
         .expect("Invalid sender email address");
     let base_url = Url::parse(&configuration.email_client.base_url).expect("Invalid base url");
+    let timeout = configuration.email_client.timeout();
     let email_client = EmailClient::new(
         base_url,
         sender_email,
         configuration.email_client.authorization_token,
+        timeout,
     );
 
     let server =
