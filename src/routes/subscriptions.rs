@@ -1,4 +1,5 @@
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
+use crate::email_client::EmailClient;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
@@ -21,23 +22,61 @@ impl TryFrom<FormData> for NewSubscriber {
 
 #[tracing::instrument(
     name = "Adding a new subscriber",
-    skip(form, pool),
+    skip(form, pool, email_client),
     fields(
-        subscriber_email = %form.email,
-        subscriber_name = %form.name
+        subscriber_email = % form.email,
+        subscriber_name = % form.name
     )
 )]
 // using serde and our FormData struct to automagically attempt deserialization of payload, returning 200 when ok and 400 if something goes wrong
-pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn subscribe(
+    form: web::Form<FormData>,
+    pool: web::Data<PgPool>,
+    email_client: web::Data<EmailClient>,
+) -> HttpResponse {
     let new_subscriber = match form.0.try_into() {
         Ok(form) => form,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
 
-    match insert_subscriber(&pool, &new_subscriber).await {
-        Ok(_) => HttpResponse::Ok().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+    if insert_subscriber(&pool, &new_subscriber).await.is_err() {
+        return HttpResponse::InternalServerError().finish();
     }
+
+    if email_client
+        .send_email(
+            new_subscriber.email,
+            "Welcome!",
+            "Welcome to our newsletter!",
+            "Welcome to our newsletter!",
+        )
+        .await
+        .is_err()
+    {
+        return HttpResponse::InternalServerError().finish();
+    }
+    HttpResponse::Ok().finish()
+
+    // Alternative way of achieving the same as above
+    // match insert_subscriber(&pool, &new_subscriber).await {
+    //     Err(_) => return HttpResponse::InternalServerError().finish(),
+    //     Ok(_) => {
+    //         if email_client.send_email(
+    //             new_subscriber.email,
+    //             "Welcome!",
+    //             "Welcome to our newsletter!",
+    //             "Welcome to our newsletter!"
+    //         )
+    //             .await
+    //             .is_err()
+    //         {
+    //             return HttpResponse::InternalServerError().finish();
+    //         }
+    //         HttpResponse::Ok().finish()
+    //
+    //         HttpResponse::Ok().finish()
+    //     },
+    // }
 }
 
 #[tracing::instrument(
@@ -55,14 +94,14 @@ pub async fn insert_subscriber(
         new_subscriber.name.as_ref(),
         Utc::now(),
     )
-    .execute(pool)
-    .await
-    .map_err(|err| {
-        tracing::error!("Failed to execute query: {:?}", err);
-        // return error to bubble up
-        err
-        // Using the '?' operator to return early
-        // if the function failed, returning sqlx::Error
-    })?;
+        .execute(pool)
+        .await
+        .map_err(|err| {
+            tracing::error!("Failed to execute query: {:?}", err);
+            // return error to bubble up
+            err
+            // Using the '?' operator to return early
+            // if the function failed, returning sqlx::Error
+        })?;
     Ok(())
 }
