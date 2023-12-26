@@ -50,7 +50,6 @@ pub async fn subscribe(
         Ok(subscriber_id) => subscriber_id,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
-
     let subscription_token = generate_subscription_token();
     if store_token(&mut transaction, subscriber_id, &subscription_token)
         .await
@@ -61,7 +60,6 @@ pub async fn subscribe(
     if transaction.commit().await.is_err() {
         return HttpResponse::InternalServerError().finish();
     }
-
     if send_confirmation_email(
         &email_client,
         new_subscriber,
@@ -73,6 +71,7 @@ pub async fn subscribe(
     {
         return HttpResponse::InternalServerError().finish();
     }
+
     HttpResponse::Ok().finish()
 }
 
@@ -85,8 +84,8 @@ fn generate_subscription_token() -> String {
 }
 
 #[tracing::instrument(
-name = "Send a confirmation email to a new subscriber",
-skip(email_client, new_subscriber, base_url)
+    name = "Send a confirmation email to a new subscriber",
+    skip(email_client, new_subscriber, base_url)
 )]
 pub async fn send_confirmation_email(
     email_client: &EmailClient,
@@ -156,6 +155,3 @@ pub async fn store_token(
 
     Ok(())
 }
-
-
-
