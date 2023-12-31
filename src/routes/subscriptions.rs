@@ -1,12 +1,12 @@
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
 use crate::email_client::EmailClient;
 use crate::startup::ApplicationBaseUrl;
+use actix_web::http::StatusCode;
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
 use chrono::Utc;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use reqwest::StatusCode;
 use sqlx::{Executor, PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -49,12 +49,12 @@ impl ResponseError for SubscribeError {
 }
 
 #[tracing::instrument(
-name = "Adding a new subscriber",
-skip(form, pool, email_client, base_url),
-fields(
-subscriber_email = % form.email,
-subscriber_name = % form.name
-)
+    name = "Adding a new subscriber",
+    skip(form, pool, email_client, base_url),
+    fields(
+        subscriber_email = % form.email,
+        subscriber_name = % form.name
+    )
 )]
 // using serde and our FormData struct to automagically attempt deserialization of payload, returning 200 when ok and 400 if something goes wrong
 pub async fn subscribe(
@@ -196,7 +196,7 @@ impl std::fmt::Display for StoreTokenError {
     }
 }
 
-fn error_chain_fmt(
+pub fn error_chain_fmt(
     e: &impl std::error::Error,
     f: &mut std::fmt::Formatter<'_>,
 ) -> std::fmt::Result {
