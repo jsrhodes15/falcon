@@ -18,6 +18,7 @@ strip = true
 [dependencies]
 actix-web = { version = "4" }
 anyhow = { version = "1" }
+base64 = { version = "0.21" }
 chrono = { version = "0.4.22", default-features = false, features = ["clock"] }
 config = { version = "0.13" }
 rand = { version = "0.8", features = ["std_rng"] }
