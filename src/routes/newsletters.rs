@@ -185,3 +185,5 @@ async fn validate_credentials(
         .ok_or_else(|| anyhow::anyhow!("Invalid username or password"))
         .map_err(PublishError::AuthError)
 }
+
+// TODO 10.2.3 Password Storage
